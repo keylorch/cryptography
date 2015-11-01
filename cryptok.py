@@ -1,24 +1,5 @@
-# Question #1
-# Consider the following situation.
-# You have obtained the following information from a password distribution centre that
-# has just sent out a password in the form of a number made up of eight two digit ASCII 
-# representation of uppercase letters. 
-# The password was sent to three recipients
-# Each recipient is using unpadded RSA with public key values of 3 but different n values
-# The three (ciphertext, n) pairs are,
-# (1338853906351615603845328037909, 4963703553974661181865803149931)
-# (742171294423584777417515756208, 2112487534646562115950045691561)
-# (1364412949550017047575133658763, 3655661175938877172141578380053)
-# Recover the password without factoring any of the n values.
+__name__ = "cryptok"
 
-# Solution
-# This exercise represents the problem where a small group of clients are sharing
-# the same small public key but different n values, and they are transmitting the same 
-# message (the password)
-# See http://cacr.uwaterloo.ca/hac/ 
-# Page 7: http://cacr.uwaterloo.ca/hac/about/chap8.pdf 
-
-#GCD
 def gcd(number1, number2):
 	"""Calculates the greatest common divisor of two integers.
 	
@@ -71,14 +52,41 @@ def modular_inverse(number, modulo):
 	    Exception: If the modular inverse doesn't exists (number and modulo
 	    		   are not coprime.
 	"""
-    gcd, x, y = egcd(number, modulo)
-    if gcd != 1:
-        raise Exception('Modular inverse doesn''t exists')
-    else:
-    	t = x % modulo
-    	if (t < 0):
-    		t = t + modulo
-    	return t
+	gcd, x, y = egcd(number, modulo)
+	if gcd != 1:
+		raise Exception('Modular inverse doesn''t exists')
+	else:
+		t = x % modulo
+		if (t < 0):
+			t = t + modulo
+		return t
+
+def fast_exp(number, exp, modulo):
+	"""Calculates the power exp of number, mod modulo.
+	
+	Uses Fast Exponentiation to calculate the exp-th power of number,
+	mod modulo.
+	
+	Args:
+	    number: Number to exponentiate.
+	    exp: Exponent
+	    modulo: Modulus of the calculation
+	
+	Returns:
+	    The exp-th power of n.
+	"""
+	exponents = []
+	index = 0
+	while exp != 0:
+		if exp & 1:
+			exponents.append(2 ** index)
+		exp = exp >> 1
+		index+= 1
+	print("exponents: ", exponents)
+	result = 1; 
+	for exponent in exponents:
+		result *= (number ** exponent) % modulo
+	return result % modulo
 
 def get_ascii_from_number(number):
 	"""Gets an ascii word given a integer number.
@@ -100,7 +108,6 @@ def get_ascii_from_number(number):
 		number = number // 100
 	return ''.join(ascii_string)
 
-# Finds the integer k root of n
 def iroot(k, n):
 	"""Calculates the integer k root of n.
 	
@@ -108,12 +115,12 @@ def iroot(k, n):
 	    k: k root that is desired.
 	    n: number to calculate the k root
 	"""
-    u, s = n, n+1
-    while u < s:
-        s = u
-        t = (k-1) * s + n // pow(s, k-1)
-        u = t // k
-    return s
+	u, s = n, n+1
+	while u < s:
+	    s = u
+	    t = (k-1) * s + n // pow(s, k-1)
+	    u = t // k
+	return s
 
 def crt(a_tuple, m_tuple):
 	"""Chinese Reminder Theorem to find x, given partial information about it: .
@@ -150,52 +157,3 @@ def crt(a_tuple, m_tuple):
 		N_index = modular_inverse(M_index, m_tuple[index])
 		x += a * N_index * M_index
 	return x % M
-
-# Given Information:
-
-# PK = 3
-e = 3
-
-# ciphertexts
-c1 = 1338853906351615603845328037909
-c2 = 742171294423584777417515756208
-c3 = 1364412949550017047575133658763
-
-# N values
-n1 = 4963703553974661181865803149931
-n2 = 2112487534646562115950045691561
-n3 = 3655661175938877172141578380053 
-
-# We now have: 
-# c1 = m^3 mod n1
-# c2 = m^3 mod n2
-# c3 = m^3 mod n3
-
-# Let x = m^3
-# x = c1 mod n1
-# x = c2 mod n2 
-# x = c3 mod n3
-# We can use the CRT to find X
-
-a_tuple = (c1, c2, c3)
-m_tuple = (n1, n2, n3)
-
-x = crt(a_tuple, m_tuple)
-print("x: ", x)
-
-# Test if x < n1 * n2 * 3
-print("x < n1 * n2 * 3: ", x < n1 * n2 * n3)
-
-# Given that it is true, then we can say: 
-# m^3 mod n1n2n3 = m^3, which means icuberoot(m^3) = m. 
-
-m = iroot(3, x)
-print("m: ", m)
-
-# We get the password
-password = get_ascii_from_number(m)
-print("password: ", password)
-
-
-
-
