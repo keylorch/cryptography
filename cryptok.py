@@ -82,10 +82,17 @@ def fast_exp(number, exp, modulo):
 			exponents.append(2 ** index)
 		exp = exp >> 1
 		index+= 1
-	print("exponents: ", exponents)
 	result = 1; 
+	i = 1
 	for exponent in exponents:
-		result *= (number ** exponent) % modulo
+		if (exponent <= exp):
+			if exponent > 10000:
+				value = fast_exp(number, exponent, modulo)
+			else:
+				value = (number ** exponent) % modulo
+			cache[exponent] = value
+			result *= value
+		i+=1
 	return result % modulo
 
 def get_ascii_from_number(number):
@@ -157,3 +164,43 @@ def crt(a_tuple, m_tuple):
 		N_index = modular_inverse(M_index, m_tuple[index])
 		x += a * N_index * M_index
 	return x % M
+
+def paillier_dec(ciphertext, N, phi_N, N_power_2 = -1, inverse_phy_N = -1):
+	"""Decripts a ciphertext using the Paillier System.
+	
+	Args:
+	    c: ciphertext to decrypt.
+	    N: Paillier public key. 
+	    phi_N: Paillier private key phi(N)
+	    [Optional] N_power_2: N to the power of 2, for eficiency when decrypting several ciphertexts
+	    [Optional] inverse_phy_N: The inverse of phi_N modulo N, for eficiency when decrypting several ciphertexts
+	
+	Returns:
+	    The decrypted text.
+	"""
+	if N_power_2 == -1:
+		N_power_2 = N ** 2
+	if inverse_phy_N == -1:
+		inverse_phy_N = modular_inverse(phi_N, N)
+	fast_exp_result = fast_exp(ciphertext, phi_N, N_power_2)
+	return ((fast_exp_result - 1) / N) * inverse_phy_N;
+
+def paillier_aggregation(ciphertext_list, N, N_power_2 = -1):
+	"""Calculates the aggregation of several Paillier ciphertexts.
+	
+	Calculates the aggregation of several Paillier ciphertexts.
+	
+	Args:
+	    ciphertext_list: List of all the ciphertexts.
+	    N: N: Paillier public key. 
+	    [Optional] N_power_2: N to the power of 2, for eficiency when decrypting several ciphertexts
+	
+	Returns:
+	    The aggregation (C*) of all the ciphertexts.
+	"""
+	if N_power_2 == -1:
+		N_power_2 = N ** 2 
+	result = 1
+	for c in ciphertext_list:
+		result += c % N_power_2
+	return result
