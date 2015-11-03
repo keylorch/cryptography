@@ -20,10 +20,11 @@ def egcd(number1, number2):
 	Uses the Extended Euclidean Algorithm to find the GCD of two numbers
 	and the the coefficients of Bézout's identity 
 	(https://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity)
-	
+
 	Returns:
 	    A tuple with the CGD and the coefficients.
 	    (gcd, coefficient_s, coefficient_t)
+	    
 	"""
 	s, old_s = 0, 1
 	t, old_t = 1, 0
