@@ -66,7 +66,8 @@ def fast_exp(number, exp, modulo):
 	"""Calculates the power exp of number, mod modulo.
 	
 	Uses Fast Exponentiation to calculate the exp-th power of number,
-	mod modulo.
+	mod modulo. Ref for the algorithm: 
+	https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/fast-modular-exponentiation
 	
 	Args:
 	    number: Number to exponentiate.
@@ -78,23 +79,27 @@ def fast_exp(number, exp, modulo):
 	"""
 	exponents = []
 	index = 0
-	while exp != 0:
+	exp_orig = exp
+	while exp != 0:		# First, we write the exp as sums of powers of two.
 		if exp & 1:
 			exponents.append(2 ** index)
 		exp = exp >> 1
 		index+= 1
+	# Then we take the biggest exponent, and calculate the values for all the powers of 
+	# 2 that are less than the biggest one and keep them in a dictionary for future use. 
+	largest_exp = exponents[-1]
+	dictionary = {}
+	current_exponent = 1
+	dictionary[current_exponent] = number % modulo;
+	while(current_exponent < largest_exp):
+		next_exponent = current_exponent + current_exponent;
+		dictionary[next_exponent] = (dictionary[current_exponent] * dictionary[current_exponent] % modulo)
+		current_exponent = next_exponent
+	# The result will be the multiplication of all the num^power_of_two mod modulo
 	result = 1; 
-	i = 1
 	for exponent in exponents:
-		if (exponent <= exp):
-			if exponent > 10000:
-				value = fast_exp(number, exponent, modulo)
-			else:
-				value = (number ** exponent) % modulo
-			cache[exponent] = value
-			result *= value
-		i+=1
-	return result % modulo
+		result = result * (dictionary[exponent]) % modulo
+	return result
 
 def get_ascii_from_number(number):
 	"""Gets an ascii word given a integer number.
@@ -184,7 +189,7 @@ def paillier_dec(ciphertext, N, phi_N, N_power_2 = -1, inverse_phy_N = -1):
 	if inverse_phy_N == -1:
 		inverse_phy_N = modular_inverse(phi_N, N)
 	fast_exp_result = fast_exp(ciphertext, phi_N, N_power_2)
-	return ((fast_exp_result - 1) / N) * inverse_phy_N;
+	return (((fast_exp_result - 1) // N) * inverse_phy_N) % N; # Missing mod here
 
 def paillier_aggregation(ciphertext_list, N, N_power_2 = -1):
 	"""Calculates the aggregation of several Paillier ciphertexts.
@@ -203,5 +208,5 @@ def paillier_aggregation(ciphertext_list, N, N_power_2 = -1):
 		N_power_2 = N ** 2 
 	result = 1
 	for c in ciphertext_list:
-		result += c % N_power_2
+		result *= c % N_power_2
 	return result

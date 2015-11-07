@@ -20,6 +20,7 @@ phi_N = 1110875290280920009961932304108708457006287400
 
 # Precalculate the inverse of phy_N mod N,  for efficiency
 inverse_phy_N = cryptok.modular_inverse(phi_N, N)
+print("inverse_phy_N: ", inverse_phy_N)
 
 # Precalculate the second power of N, for efficiency
 N_power_2 = N ** 2
@@ -70,7 +71,7 @@ def votingResults(votes):
 		value = cryptok.paillier_dec(vote, N, phi_N, N_power_2, inverse_phy_N)
 		if value == 0:
 			no+=1
-		else:
+		elif value == 1:
 			yes+=1
 	return {
 		"yes": yes, 
@@ -84,7 +85,6 @@ print("Total votes(L): ", L)
 
 # Get the election results without decrypting all the votes
 aggregation = cryptok.paillier_aggregation(votes, N, N_power_2)
-print("paillier_aggregation(votes): ", aggregation)
 dec_aggregation = cryptok.paillier_dec(aggregation, N,phi_N, N_power_2, inverse_phy_N)
 print("paillier_dec(aggregation): ", dec_aggregation)
 if dec_aggregation > L / 2:
